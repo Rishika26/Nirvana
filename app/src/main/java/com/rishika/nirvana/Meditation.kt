@@ -157,9 +157,10 @@ fun MeditationCard(index: Int) {
                     .width(80.dp)
                     .height(80.dp)
                     .clip(RoundedCornerShape(10.dp)),
-
             )
+
             Spacer(modifier = Modifier.width(10.dp))
+
             Column {
                 Text(
                     text = med.title,
