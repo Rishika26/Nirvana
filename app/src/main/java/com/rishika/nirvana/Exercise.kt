@@ -27,6 +27,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +41,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,6 +52,8 @@ import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import coil.size.Size
 import kotlinx.coroutines.launch
+import java.util.Timer
+import kotlin.concurrent.scheduleAtFixedRate
 
 data class Badge(
     val text: String,
@@ -237,6 +241,7 @@ val exTypes = listOf(
         title = "PIKE PUSH-UPS",
         duration = "00:30",
         image = R.drawable.pikepushup,
+        gif = R.drawable.pikepushup_motion,
         badges = listOf(
             Badge("Upper Body", Color.Black), // Example badge with green color
             Badge("Endurance", Color.Blue)  // Example badge with blue color
@@ -247,6 +252,7 @@ val exTypes = listOf(
         title = "SIDE PLANK",
         duration = "00:30",
         image = R.drawable.sideplank,
+        gif = R.drawable.sideplank_motion,
         badges = listOf(
             Badge("Core", Color.Yellow), // Example badge with green color
             Badge("Stability", Color.Gray)  // Example badge with blue color
@@ -256,6 +262,7 @@ val exTypes = listOf(
         title = "SIT-UPS",
         duration = "00:30",
         image = R.drawable.situp,
+        gif = R.drawable.situp_motion,
         badges = listOf(
             Badge("Abs", Color.Red), // Example badge with green color
             Badge("Core", Color.Yellow)  // Example badge with blue color
@@ -268,6 +275,24 @@ val exTypes = listOf(
 fun ExerciseDetail(
     exType: ExType
 ) {
+    var remainingTime by remember { mutableStateOf(30) } // Initial remaining time is 30 seconds
+
+    // Countdown timer to update the time display
+    DisposableEffect(Unit) {
+        val timer = Timer()
+        timer.scheduleAtFixedRate(1000L, 1000L) {
+            if (remainingTime > 0) {
+                remainingTime -= 1
+            } else {
+                timer.cancel() // Stop the timer when it reaches 0:00
+            }
+        }
+
+        onDispose {
+            timer.cancel() // Cancel the timer when the composable is disposed
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -288,14 +313,30 @@ fun ExerciseDetail(
                     size(Size.ORIGINAL)
                 }).build(), imageLoader = imageLoader
         )
-        Image(
-            painter = painter,
-            contentDescription = "Exercise",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp),
-            contentScale = ContentScale.FillBounds
-        )
+        Box()
+        {
+            Image(
+                painter = painter,
+                contentDescription = "Exercise",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp),
+                contentScale = ContentScale.FillBounds
+            )
+
+            // Display remaining time over the GIF image
+            Text(
+                text = String.format("%02d:%02d", remainingTime / 60, remainingTime % 60),
+                style = MaterialTheme.typography.headlineLarge,
+                color = Color.Black,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .padding(start = 16.dp)
+//                    .align(Alignment.TopStart),
+            )
+        }
+
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
@@ -316,6 +357,8 @@ fun ExerciseDetail(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
+
+
 
             exType.badges.forEach { badge ->
                 Row(
